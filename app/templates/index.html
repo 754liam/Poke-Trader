@@ -1,0 +1,19 @@
+<!--
+Homepage. Standard Jinja2 template taken from Flask documentation.
+-->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-5xl font-extrabold text-gray-900 mb-4">Welcome to Pokemon Trader</h1>
+    <p class="text-xl text-gray-600 mb-8">
+        A platform for trading and managing Pokemon cards
+    </p>
+    <div>
+        <!-- keep in mind, url_for is just special package. It really represents the relative address /auth/register -->
+        <a href="{{ url_for('auth.register') }}" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-blue-700 transition duration-300">
+            Get Started
+        </a>
+    </div>
+</div>
+{% endblock %}

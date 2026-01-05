@@ -1,0 +1,56 @@
+<!-- View another user's profile and tradeable cards -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- User Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900">{{ user.username }}</h1>
+                <p class="text-gray-600 mt-2">{{ tradeable_cards|length }} cards available for trade</p>
+            </div>
+            <a 
+                href="{{ url_for('main.search_users') }}" 
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg"
+            >
+                ← Back to Search
+            </a>
+        </div>
+    </div>
+
+    <!-- Tradeable Cards -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4">Cards Available for Trade</h2>
+        
+        {% if tradeable_cards %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {% for item in tradeable_cards %}
+                    <div class="border border-gray-200 rounded-lg p-3 hover:shadow-lg transition-shadow">
+                        <img 
+                            src="{{ item.card_info.image_url_small }}" 
+                            alt="{{ item.card_info.name }}" 
+                            class="w-full rounded-md mb-2"
+                            onerror="this.src='https://placehold.co/243x340/eeeeee/999999?text=No+Image'"
+                        >
+                        <h3 class="font-semibold text-sm truncate" title="{{ item.card_info.name }}">
+                            {{ item.card_info.name }}
+                        </h3>
+                        <p class="text-xs text-gray-600 mb-2">{{ item.condition }}</p>
+                        <a 
+                            href="{{ url_for('main.propose_trade', username=user.username) }}"
+                            class="block w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-2 rounded text-center"
+                        >
+                            Propose Trade
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-10 text-gray-500">
+                <p>{{ user.username }} doesn't have any cards available for trade yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

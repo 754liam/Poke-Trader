@@ -1,0 +1,68 @@
+<!-- Search for other users to trade with -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-900 mb-6">Search for Traders</h1>
+    
+    <!-- Search Form -->
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <form method="GET" action="{{ url_for('main.search_users') }}" class="flex gap-2">
+            <input 
+                type="text" 
+                name="q" 
+                value="{{ query }}"
+                placeholder="Search by username..." 
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autofocus
+            >
+            <button 
+                type="submit" 
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+            >
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Search Results -->
+    {% if query %}
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">
+                {% if users %}
+                    Found {{ users|length }} user(s)
+                {% else %}
+                    No users found
+                {% endif %}
+            </h2>
+            
+            {% if users %}
+                <div class="space-y-3">
+                    {% for user in users %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-900">{{ user.username }}</h3>
+                                    <p class="text-sm text-gray-600">{{ user.collection|length }} cards in collection</p>
+                                </div>
+                                <a 
+                                    href="{{ url_for('main.view_user', username=user.username) }}" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                                >
+                                    View Profile
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600">Try searching for a different username.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="bg-gray-50 rounded-lg p-8 text-center">
+            <p class="text-gray-600 text-lg">Enter a username to search for other traders</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+<!-- My Trades Page -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-900 mb-6">My Trades</h1>
+    
+    <!-- Sent Trades -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-semibold mb-4">Trades I Sent</h2>
+        
+        {% if sent_trades %}
+            <div class="space-y-4">
+                {% for trade in sent_trades %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-4 mb-2">
+                                    <h3 class="text-lg font-semibold">
+                                        Trade with <a href="{{ url_for('main.view_user', username=trade.receiver.username) }}" class="text-blue-600 hover:underline">{{ trade.receiver.username }}</a>
+                                    </h3>
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if trade.status.value == 'pending' %} bg-yellow-100 text-yellow-800
+                                        {% elif trade.status.value == 'accepted' %} bg-green-100 text-green-800
+                                        {% elif trade.status.value == 'rejected' %} bg-red-100 text-red-800
+                                        {% else %} bg-gray-100 text-gray-800
+                                        {% endif %}">
+                                        {{ trade.status.value|title }}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">You're Offering:</p>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            {% for offered in trade.offered_cards %}
+                                                <li>• {{ offered.collection_item.card_info.name }}</li>
+                                            {% endfor %}
+                                            {% if trade.proposer_currency > 0 %}
+                                                <li>• {{ trade.proposer_currency }} PokeDollars</li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">You're Requesting:</p>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            {% for requested in trade.requested_cards %}
+                                                <li>• {{ requested.collection_item.card_info.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                {% if trade.message %}
+                                    <p class="text-sm text-gray-600 mt-2 italic">"{{ trade.message }}"</p>
+                                {% endif %}
+                                
+                                <p class="text-xs text-gray-500 mt-2">Created: {{ trade.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                            
+                            <div class="flex gap-2 ml-4">
+                                <a 
+                                    href="{{ url_for('main.view_trade', trade_id=trade.id) }}"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded"
+                                >
+                                    View
+                                </a>
+                                {% if trade.status.value == 'pending' %}
+                                    <form method="POST" action="{{ url_for('main.reject_trade', trade_id=trade.id) }}" 
+                                          onsubmit="return confirm('Cancel this trade? Any reserved currency will be returned.');"
+                                          class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-2 px-4 rounded">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500">You haven't sent any trade proposals yet.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Received Trades -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4">Trades I Received</h2>
+        
+        {% if received_trades %}
+            <div class="space-y-4">
+                {% for trade in received_trades %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-4 mb-2">
+                                    <h3 class="text-lg font-semibold">
+                                        Trade from <a href="{{ url_for('main.view_user', username=trade.proposer.username) }}" class="text-blue-600 hover:underline">{{ trade.proposer.username }}</a>
+                                    </h3>
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if trade.status.value == 'pending' %} bg-yellow-100 text-yellow-800
+                                        {% elif trade.status.value == 'accepted' %} bg-green-100 text-green-800
+                                        {% elif trade.status.value == 'rejected' %} bg-red-100 text-red-800
+                                        {% else %} bg-gray-100 text-gray-800
+                                        {% endif %}">
+                                        {{ trade.status.value|title }}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">{{ trade.proposer.username }} is Offering:</p>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            {% for offered in trade.offered_cards %}
+                                                <li>• {{ offered.collection_item.card_info.name }}</li>
+                                            {% endfor %}
+                                            {% if trade.proposer_currency > 0 %}
+                                                <li>• {{ trade.proposer_currency }} PokeDollars</li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">{{ trade.proposer.username }} is Requesting:</p>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            {% for requested in trade.requested_cards %}
+                                                <li>• {{ requested.collection_item.card_info.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                {% if trade.message %}
+                                    <p class="text-sm text-gray-600 mt-2 italic">"{{ trade.message }}"</p>
+                                {% endif %}
+                                
+                                <p class="text-xs text-gray-500 mt-2">Received: {{ trade.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                            
+                            <div class="flex gap-2 ml-4">
+                                {% if trade.status.value == 'pending' %}
+                                    <form method="POST" action="{{ url_for('main.accept_trade', trade_id=trade.id) }}" 
+                                          onsubmit="return confirm('Accept this trade? Cards and currency will be transferred.');"
+                                          class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded">
+                                            Accept
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('main.reject_trade', trade_id=trade.id) }}" 
+                                          onsubmit="return confirm('Reject this trade?');"
+                                          class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded">
+                                            Reject
+                                        </button>
+                                    </form>
+                                    <a 
+                                        href="{{ url_for('main.counter_trade', trade_id=trade.id) }}"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded"
+                                    >
+                                        Counter
+                                    </a>
+                                {% endif %}
+                                <a 
+                                    href="{{ url_for('main.view_trade', trade_id=trade.id) }}"
+                                    class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-2 px-4 rounded"
+                                >
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500">You haven't received any trade proposals yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

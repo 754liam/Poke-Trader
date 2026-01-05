@@ -1,0 +1,156 @@
+<!-- Master layout template -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Pokémon Trader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Fredoka', 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 25%, #fcd34d 50%, #fde68a 75%, #fef3c7 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .pokemon-red { color: #dc2626; }
+        .pokemon-red-bg { background-color: #dc2626; }
+        .pokemon-red-hover:hover { background-color: #b91c1c; }
+        .pokemon-yellow { color: #fcd34d; }
+        .pokemon-yellow-bg { background-color: #fcd34d; }
+        
+        .card-shadow { 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 
+                        0 8px 10px -6px rgba(0, 0, 0, 0.1),
+                        0 0 0 1px rgba(220, 38, 38, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover { 
+            box-shadow: 0 20px 40px -10px rgba(220, 38, 38, 0.3), 
+                        0 10px 20px -5px rgba(0, 0, 0, 0.1),
+                        0 0 0 2px rgba(220, 38, 38, 0.3);
+        }
+        
+        .pokemon-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);
+            border: 3px solid #dc2626;
+            position: relative;
+        }
+        
+        .nav-glow {
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+        
+        .input-focus:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        
+        .loading-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="pokemon-red-bg nav-glow">
+        <div class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <a class="font-bold text-xl sm:text-2xl lg:text-3xl text-white hover:text-yellow-300 transition-all duration-300 transform hover:scale-105" href="{{ url_for('main.index') }}">
+                <span class="inline-block">⚡</span> <span class="tracking-wide hidden sm:inline">PokéTrader</span>
+                <span class="sm:hidden">PT</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <a class="text-white hover:text-yellow-300 transition-colors font-medium text-sm sm:text-base hidden sm:inline" href="{{ url_for('main.index') }}">Home</a>
+                {% if current_user.is_authenticated %}
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('main.dashboard') }}" title="Dashboard">
+                        <span class="sm:hidden">📊</span>
+                        <span class="hidden sm:inline">Dashboard</span>
+                    </a>
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('main.search_cards') }}" title="Search Cards">
+                        <span class="sm:hidden">🔍</span>
+                        <span class="hidden sm:inline">Search Cards</span>
+                    </a>
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('main.pokemon_list') }}" title="Pokemon">
+                        <span class="sm:hidden">⚡</span>
+                        <span class="hidden sm:inline">Pokémon List</span>
+                    </a>
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('main.search_users') }}">
+                        <span class="sm:hidden">🤝</span>
+                        <span class="hidden sm:inline">Find Traders</span>
+                    </a>
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('main.trades') }}" title="Trades">
+                        <span class="sm:hidden">💼</span>
+                        <span class="hidden sm:inline">Trades</span>
+                    </a>
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-xs sm:text-sm lg:text-base flex items-center gap-1" href="{{ url_for('auth.logout') }}" title="Logout">
+                        <span class="sm:hidden">🚪</span>
+                        <span class="hidden sm:inline">Logout</span>
+                    </a>
+                {% else %}
+                    <a class="text-white hover:text-yellow-300 transition-colors font-medium text-sm sm:text-base" href="{{ url_for('auth.login') }}">Login</a>
+                    <a class="bg-yellow-400 text-gray-900 rounded-md px-2 sm:px-4 py-1 sm:py-2 hover:bg-yellow-300 font-semibold transition-colors text-sm sm:text-base" href="{{ url_for('auth.register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="px-4 py-3 rounded-lg mb-4 fade-in shadow-lg
+                        {% if category == 'success' %} bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-400 text-green-800
+                        {% elif category == 'danger' %} bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-400 text-red-800
+                        {% elif category == 'warning' %} bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 text-yellow-800
+                        {% else %} bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-400 text-blue-800
+                        {% endif %}"
+                        role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- No JavaScript needed for basic functionality -->
+
+</body>
+</html>

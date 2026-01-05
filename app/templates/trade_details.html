@@ -1,0 +1,139 @@
+<!-- Trade Details Page -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Trade #{{ trade.id }}</h1>
+        <span class="px-3 py-1 rounded-full text-sm font-semibold
+            {% if trade.status.value == 'pending' %} bg-yellow-100 text-yellow-800
+            {% elif trade.status.value == 'accepted' %} bg-green-100 text-green-800
+            {% elif trade.status.value == 'rejected' %} bg-red-100 text-red-800
+            {% else %} bg-gray-100 text-gray-800
+            {% endif %}">
+            {{ trade.status.value|title }}
+        </span>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="grid grid-cols-2 gap-6">
+            <!-- Proposer Side -->
+            <div>
+                <h2 class="text-xl font-semibold mb-3">
+                    {% if trade.proposer_id == current_user.id %}
+                        You ({{ trade.proposer.username }})
+                    {% else %}
+                        {{ trade.proposer.username }}
+                    {% endif %}
+                </h2>
+                <p class="text-sm text-gray-600 mb-3">Offering:</p>
+                <div class="space-y-2">
+                    {% for offered in trade.offered_cards %}
+                        <div class="flex items-center gap-2 border border-gray-200 rounded p-2">
+                            <img 
+                                src="{{ offered.collection_item.card_info.image_url_small }}" 
+                                alt="{{ offered.collection_item.card_info.name }}" 
+                                class="w-12 h-auto rounded"
+                                onerror="this.src='https://placehold.co/243x340/eeeeee/999999?text=No+Image'"
+                            >
+                            <div>
+                                <p class="font-medium text-sm">{{ offered.collection_item.card_info.name }}</p>
+                                <p class="text-xs text-gray-600">{{ offered.collection_item.condition }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if trade.proposer_currency > 0 %}
+                        <div class="flex items-center gap-2 border border-gray-200 rounded p-2 bg-green-50">
+                            <span class="text-2xl">💰</span>
+                            <div>
+                                <p class="font-medium text-sm">{{ trade.proposer_currency }} PokeDollars</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Receiver Side -->
+            <div>
+                <h2 class="text-xl font-semibold mb-3">
+                    {% if trade.receiver_id == current_user.id %}
+                        You ({{ trade.receiver.username }})
+                    {% else %}
+                        {{ trade.receiver.username }}
+                    {% endif %}
+                </h2>
+                <p class="text-sm text-gray-600 mb-3">Requesting:</p>
+                <div class="space-y-2">
+                    {% for requested in trade.requested_cards %}
+                        <div class="flex items-center gap-2 border border-gray-200 rounded p-2">
+                            <img 
+                                src="{{ requested.collection_item.card_info.image_url_small }}" 
+                                alt="{{ requested.collection_item.card_info.name }}" 
+                                class="w-12 h-auto rounded"
+                                onerror="this.src='https://placehold.co/243x340/eeeeee/999999?text=No+Image'"
+                            >
+                            <div>
+                                <p class="font-medium text-sm">{{ requested.collection_item.card_info.name }}</p>
+                                <p class="text-xs text-gray-600">{{ requested.collection_item.condition }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        {% if trade.message %}
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p class="text-sm font-medium text-gray-700 mb-1">Message from {{ trade.proposer.username }}:</p>
+                <p class="text-gray-600">{{ trade.message }}</p>
+            </div>
+        {% endif %}
+        
+        <div class="mt-6 flex gap-4">
+            <a 
+                href="{{ url_for('main.trades') }}"
+                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg"
+            >
+                Back to Trades
+            </a>
+            
+            {% if trade.status.value == 'pending' %}
+                {% if trade.receiver_id == current_user.id %}
+                    <form method="POST" action="{{ url_for('main.accept_trade', trade_id=trade.id) }}" 
+                          onsubmit="return confirm('Accept this trade? Cards and currency will be transferred.');"
+                          class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                            Accept Trade
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_trade', trade_id=trade.id) }}" 
+                          onsubmit="return confirm('Reject this trade?');"
+                          class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">
+                            Reject
+                        </button>
+                    </form>
+                    <a 
+                        href="{{ url_for('main.counter_trade', trade_id=trade.id) }}"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg"
+                    >
+                        Counter Offer
+                    </a>
+                {% elif trade.proposer_id == current_user.id %}
+                    <form method="POST" action="{{ url_for('main.reject_trade', trade_id=trade.id) }}" 
+                          onsubmit="return confirm('Cancel this trade? Any reserved currency will be returned.');"
+                          class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                            Cancel Trade
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

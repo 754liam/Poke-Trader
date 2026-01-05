@@ -1,0 +1,12 @@
+# All Python packages for this project - pinned for production stability
+Flask>=2.3.0,<3.0.0
+Flask-SQLAlchemy>=3.0.0,<4.0.0
+Flask-Migrate>=4.0.0,<5.0.0
+Flask-Login>=0.6.0,<1.0.0
+Flask-Bcrypt>=1.0.0,<2.0.0
+Flask-WTF>=1.2.0,<2.0.0
+psycopg2-binary>=2.9.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+gunicorn>=21.0.0,<23.0.0
+requests>=2.31.0,<3.0.0
+Werkzeug>=2.3.0,<4.0.0

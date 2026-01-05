@@ -1,0 +1,59 @@
+<!-- Pokemon List Page -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-4xl font-bold text-gray-900">Available Pokemon</h1>
+        <p class="text-gray-600">
+            <span class="font-semibold">{{ total_count }}</span> Pokemon available to search
+        </p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <p class="text-gray-600 mb-4">
+            Click on any Pokemon name to search for its cards. This list includes Pokemon from your collection and popular Pokemon that are searchable.
+        </p>
+        <a 
+            href="{{ url_for('main.search_cards') }}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+        >
+            Go to Search
+        </a>
+    </div>
+    
+    {% if pokemon_by_letter %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for letter in pokemon_by_letter.keys()|sort %}
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h2 class="text-2xl font-bold text-blue-600 mb-3 border-b-2 border-gray-200 pb-2">
+                        {{ letter }}
+                    </h2>
+                    <div class="space-y-1">
+                        {% for pokemon in pokemon_by_letter[letter] %}
+                            <a 
+                                href="{{ url_for('main.search_cards', q=pokemon) }}"
+                                class="block px-3 py-1 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors text-gray-700"
+                            >
+                                {{ pokemon }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+            <p class="text-gray-600 text-lg mb-4">No Pokemon found yet.</p>
+            <p class="text-sm text-gray-500 mb-4">Start searching for cards to build the Pokemon list!</p>
+            <a 
+                href="{{ url_for('main.search_cards') }}"
+                class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg"
+            >
+                Search for Cards
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

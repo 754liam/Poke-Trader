@@ -1,0 +1,252 @@
+<!-- Search for Pokemon cards using the TCG API -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 fade-in gap-4">
+        <div>
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-2 tracking-tight">
+                <span class="pokemon-red">Search</span> for Cards
+            </h1>
+            <p class="text-gray-600">Find your favorite Pokémon TCG cards</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <div class="bg-white rounded-xl p-3 card-shadow text-center">
+                <p class="text-xs text-gray-600 mb-1">💰 Balance</p>
+                <p class="text-lg font-bold text-green-600">{{ balance|default(0) }} PD</p>
+            </div>
+            <div class="bg-white rounded-xl p-3 card-shadow text-center">
+                <p class="text-xs text-gray-600 mb-1">⏰ Price Reset</p>
+                <p class="text-sm font-bold pokemon-red" id="priceTimer">{{ time_until_update.formatted if time_until_update else '24h 0m 0s' }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Form -->
+    <div class="bg-white p-8 rounded-2xl card-shadow mb-8 fade-in">
+        <form method="GET" action="{{ url_for('main.search_cards') }}" class="flex gap-2" id="searchForm">
+            <div class="flex-1 relative">
+                <input 
+                    type="text" 
+                    name="q" 
+                    id="searchInput"
+                    value="{{ query }}"
+                    placeholder="Enter Pokemon name (e.g., Pikachu, Charizard)..." 
+                    class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl input-focus text-lg"
+                    autofocus
+                    autocomplete="off"
+                    required
+                    minlength="2"
+                >
+                <!-- Autocomplete Dropdown -->
+                <div id="autocompleteDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary text-white font-bold py-4 px-8 rounded-xl text-lg">
+                Search
+            </button>
+        </form>
+        <div class="flex items-center justify-between mt-2">
+            <p class="text-xs text-gray-500">💡 Type to see suggestions &nbsp;|&nbsp; <span class="text-blue-600 font-medium">⚡ Pikachu, Charizard, Mewtwo, Meowscarada = instant!</span></p>
+            <a href="{{ url_for('main.clear_cache') }}" class="text-xs text-blue-600 hover:text-blue-800 underline">Clear Cache</a>
+        </div>
+        
+        <!-- Quick Select Pokemon -->
+        <div class="mt-4 flex flex-wrap gap-2">
+            <span class="text-xs text-gray-500 self-center">Quick search:</span>
+            <button type="button" onclick="selectSuggestion('Pikachu')" class="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm font-medium text-yellow-800 transition">⚡ Pikachu</button>
+            <button type="button" onclick="selectSuggestion('Charizard')" class="px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full text-sm font-medium text-orange-800 transition">🔥 Charizard</button>
+            <button type="button" onclick="selectSuggestion('Mewtwo')" class="px-3 py-1 bg-purple-100 hover:bg-purple-200 rounded-full text-sm font-medium text-purple-800 transition">🔮 Mewtwo</button>
+            <button type="button" onclick="selectSuggestion('Meowscarada')" class="px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm font-medium text-green-800 transition">🌿 Meowscarada</button>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    {% if query %}
+        <div class="bg-white rounded-lg card-shadow p-6">
+            <h2 class="text-2xl font-semibold mb-4 pokemon-red">
+                {% if cards %}Found {{ cards|length }} card(s){% else %}No cards found{% endif %}
+            </h2>
+            
+            {% if cards %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {% for card in cards %}
+                        <div class="pokemon-card rounded-xl p-4 card-hover" data-base-price="{{ card.price if card.price else 100 }}">
+                            <img src="{{ card.images.small }}" alt="{{ card.name }}" class="w-full rounded-md mb-2" loading="lazy">
+                            <h3 class="font-bold text-base mb-2 truncate pokemon-red">{{ card.name }}</h3>
+                            <p class="text-xs text-gray-500 mb-2 truncate italic">{{ card.set.name }}</p>
+                            
+                            {% set base_price = card.price if card.price else 100 %}
+                            
+                            <div class="mb-2 bg-yellow-50 rounded-lg p-2 border border-yellow-200">
+                                <p class="text-xs text-gray-500 text-center">Base Price</p>
+                                <p class="text-base font-bold text-center">💰 <span class="pokemon-red">{{ base_price }}</span> PD</p>
+                            </div>
+                            
+                            <form method="POST" action="{{ url_for('main.purchase_card') }}" class="space-y-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="api_card_id" value="{{ card.id }}">
+                                <input type="hidden" name="card_name" value="{{ card.name }}">
+                                <input type="hidden" name="set_name" value="{{ card.set.name }}">
+                                <input type="hidden" name="image_small" value="{{ card.images.small }}">
+                                <input type="hidden" name="image_large" value="{{ card.images.large }}">
+                                
+                                <select name="condition" class="w-full text-xs border-2 border-gray-300 rounded-lg px-3 py-2 condition-select" data-base-price="{{ base_price }}">
+                                    <option value="Near Mint" data-mult="1.0">Near Mint (100%)</option>
+                                    <option value="Lightly Played" data-mult="0.8">Lightly Played (80%)</option>
+                                    <option value="Moderately Played" data-mult="0.64">Mod. Played (64%)</option>
+                                    <option value="Heavily Played" data-mult="0.512">Heavily Played (51%)</option>
+                                    <option value="Damaged" data-mult="0.4096">Damaged (41%)</option>
+                                </select>
+                                
+                                <div class="bg-green-50 rounded-lg p-2 border border-green-200">
+                                    <p class="text-xs text-gray-600 text-center">Your Price</p>
+                                    <p class="text-lg font-bold text-center text-green-600 final-price">{{ base_price }} PD</p>
+                                </div>
+                                
+                                <button type="submit" class="w-full btn-primary text-white text-sm font-bold py-3 px-4 rounded-xl purchase-btn" data-balance="{{ balance|default(0) }}">
+                                    Purchase
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600">No cards found. Try a different name or <a href="{{ url_for('main.clear_cache') }}" class="text-blue-600 underline">clear the cache</a>.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="bg-yellow-50 rounded-lg p-8 text-center border-2 border-yellow-200">
+            <p class="text-gray-600 text-lg mb-4">Search for Pokemon cards to add to your collection</p>
+            <p class="text-sm text-gray-500 mb-4">Click a Pokemon above or search for any card!</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4 text-left max-w-md mx-auto">
+                <p class="text-xs text-blue-800">
+                    <span class="font-bold">⚡ Instant:</span> Pikachu, Charizard, Mewtwo, Meowscarada<br>
+                    <span class="font-bold">🔍 API Search:</span> All other Pokemon (may take a few seconds)
+                </p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Simple autocomplete
+(function() {
+    const input = document.getElementById('searchInput');
+    const dropdown = document.getElementById('autocompleteDropdown');
+    let timeout = null;
+    
+    function showSuggestions(suggestions) {
+        if (!suggestions || suggestions.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        
+        dropdown.innerHTML = suggestions.map(s => {
+            // Escape for HTML attribute (escape quotes and ampersands)
+            const escaped = s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+            return `<div class="px-4 py-2 hover:bg-yellow-50 cursor-pointer" data-suggestion="${escaped}">${s}</div>`;
+        }).join('');
+        dropdown.classList.remove('hidden');
+    }
+    
+    window.selectSuggestion = function(value) {
+        input.value = value;
+        dropdown.classList.add('hidden');
+        document.getElementById('searchForm').submit();
+    };
+    
+    input.addEventListener('input', function() {
+        const q = this.value.trim();
+        if (timeout) clearTimeout(timeout);
+        
+        if (q.length < 2) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        
+        timeout = setTimeout(function() {
+            fetch('/api/autocomplete?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => showSuggestions(data.suggestions || []))
+                .catch(() => dropdown.classList.add('hidden'));
+        }, 200);
+    });
+    
+    // Handle clicks on suggestion items
+    dropdown.addEventListener('click', function(e) {
+        const item = e.target.closest('[data-suggestion]');
+        if (item) {
+            const suggestion = item.getAttribute('data-suggestion');
+            selectSuggestion(suggestion);
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const container = input.parentElement; // The relative container
+        if (!container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+})();
+
+// Dynamic price calculation based on condition
+(function() {
+    const balance = {{ balance|default(0) }};
+    
+    document.querySelectorAll('.condition-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const basePrice = parseInt(this.dataset.basePrice);
+            const multiplier = parseFloat(this.selectedOptions[0].dataset.mult);
+            const finalPrice = Math.max(1, Math.floor(basePrice * multiplier));
+            
+            // Update price display
+            const priceDisplay = this.closest('form').querySelector('.final-price');
+            priceDisplay.textContent = finalPrice + ' PD';
+            
+            // Update button state
+            const btn = this.closest('form').querySelector('.purchase-btn');
+            if (balance < finalPrice) {
+                btn.disabled = true;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                btn.textContent = 'Insufficient Funds';
+            } else {
+                btn.disabled = false;
+                btn.classList.add('btn-primary');
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.textContent = 'Purchase';
+            }
+        });
+        
+        // Trigger initial check
+        select.dispatchEvent(new Event('change'));
+    });
+})();
+
+// Live countdown timer
+(function() {
+    let totalSeconds = {{ time_until_update.total_seconds if time_until_update else 86400 }};
+    const timerElement = document.getElementById('priceTimer');
+    if (!timerElement) return;
+    
+    function updateTimer() {
+        if (totalSeconds <= 0) {
+            timerElement.textContent = 'Updating...';
+            setTimeout(() => window.location.reload(), 2000);
+            return;
+        }
+        
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        timerElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        totalSeconds--;
+    }
+    
+    setInterval(updateTimer, 1000);
+})();
+</script>
+{% endblock %}
