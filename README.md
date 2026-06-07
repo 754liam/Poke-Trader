@@ -7,6 +7,10 @@ A full-stack trading platform built with **Flask** and **PostgreSQL**. This appl
 This project is centered around hosting a Pokemon card market where users can buy, sell, and trade. Each user starts off with 1000 PD (Poke Dollars) and is able to purchase cards of fluctuating prices (1-1000) which update every day. The Pokemon TCG API is used for extracting card data and a Neon provided PostgreSQL manager is used for managing inventory/trade systems.
 ## Local Setup
 
+## Live demo
+
+Check out the website in action at: https://pokemon-trader.vercel.app/
+
 ```bash
 # Environment variables
 Set up a .env file with proper API keys (look at config.py for context)
