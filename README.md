@@ -64,7 +64,7 @@ Poke-Trader/
 1. **Clone and install dependencies**
 
 ```bash
-git clone <repo-url> Poke-Trader
+git clone https://github.com/754liam/Poke-Trader Poke-Trader
 cd Poke-Trader
 python -m venv .venv
 source .venv/bin/activate
